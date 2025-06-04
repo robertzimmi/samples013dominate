@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Ranking de Jogadores</title>
+  <!-- Materialize CSS -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css" rel="stylesheet">
+  <!-- Material Icons -->
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+</head>
+<body class="grey lighten-4">
+
+  <div class="container">
+    <h4 class="center-align">🏆 Ranking de Jogadores</h4>
+    <div id="cards-container" class="row"></div>
+  </div>
+
+  <!-- Materialize JS -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+  <script>
+    const imagemPadrao = "https://dhhim4ltzu1pj.cloudfront.net/media/images/IRA_CROP.width-2000.format-webp.webp";
+
+    const jogadores = [
+      { nome: "julio", pontos: 0, win: 85, vitorias: 6, rodadas: 7 },
+      { nome: "rodolpho", pontos: 0, win: 71, vitorias: 5, rodadas: 7 },
+      { nome: "ramos", pontos: 0, win: 66, vitorias: 2, rodadas: 3 },
+      { nome: "juan", pontos: 0, win: 66, vitorias: 2, rodadas: 3 },
+      { nome: "alvarenga", pontos: 0, win: 57, vitorias: 4, rodadas: 7 },
+      { nome: "jpit", pontos: 0, win: 50, vitorias: 2, rodadas: 4 },
+      { nome: "almeida", pontos: 0, win: 50, vitorias: 2, rodadas: 4 },
+      { nome: "andre", pontos: 0, win: 50, vitorias: 2, rodadas: 4 },
+      { nome: "adriano", pontos: 0, win: 50, vitorias: 2, rodadas: 4 },
+      { nome: "luiz", pontos: 0, win: 33, vitorias: 1, rodadas: 3 },
+      { nome: "joaovictor", pontos: 0, win: 33, vitorias: 1, rodadas: 3 },
+      { nome: "duan", pontos: 0, win: 33, vitorias: 2, rodadas: 6 },
+      { nome: "tulio", pontos: 0, win: 0, vitorias: 0, rodadas: 3 },
+      { nome: "fernando", pontos: 0, win: 0, vitorias: 0, rodadas: 4 }
+    ];
+
+    const container = document.getElementById('cards-container');
+
+    jogadores.forEach(j => {
+      container.innerHTML += `
+        <div class="col s12 m6 l4">
+          <div class="card">
+            <div class="card-image">
+              <img src="${imagemPadrao}" alt="Imagem do jogador ${j.nome}">
+              <span class="card-title black-text" style="background: rgba(255,255,255,0.7); padding: 4px 8px;">${j.nome.toUpperCase()}</span>
+            </div>
+            <div class="card-content">
+			  <p><strong>Pontos:</strong> ${j.pontos}</p>
+              <p><strong>Win:</strong> ${j.win}%</p>
+              <p><strong>Vitórias:</strong> ${j.vitorias}</p>
+              <p><strong>Rodadas:</strong> ${j.rodadas}</p>
+              
+            </div>
+          </div>
+        </div>
+      `;
+    });
+  </script>
+</body>
+</html>
