@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Tabela de Jogadores</title>
+
+  <!-- Materialize CSS -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css" rel="stylesheet">
+  <!-- Google Icons -->
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
+  <style>
+    body {
+      padding: 20px;
+      background-color: #f9f9f9;
+    }
+    h4 {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+    .table-container {
+      overflow-x: auto;
+    }
+    table {
+      white-space: nowrap;
+    }
+    tr.tooltipped {
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <h4 class="blue-text text-darken-2">Tabela de Jogadores</h4>
+
+    <div class="card">
+      <div class="card-content table-container">
+        <table class="striped centered highlight">
+          <thead>
+            <tr>
+              <th>Jogador</th>
+              <th>Pontos</th>
+              <th>Win Rate (%)</th>
+              <th>Vitórias</th>
+              <th>Rodadas</th>
+            </tr>
+          </thead>
+          <tbody id="tabela-jogadores">
+            <!-- Conteúdo dinâmico -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Materialize JS -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+
+  <script>
+    const dados = [
+      ['matheus', 3, 4, "matheus silva jogador de bolthyn"],
+      ['robert', 0, 3, "cabeludo que tenta jogar de ninja"],
+      ['adriano', 0, 2, "eterno faidriano"],
+      ['andre', 1, 4, "count your andrés"],
+      ['vitor', 2, 4, "no meu contato do celular ainda é vitor prism"]
+    ];
+
+    const tabela = document.querySelector('#tabela-jogadores');
+
+    dados.forEach(([nome, vitorias, rodadas, descricao]) => {
+      const pontos = vitorias * 3;
+      const winRate = rodadas > 0 ? ((vitorias / rodadas) * 100).toFixed(2) : '0.00';
+
+      const linha = document.createElement('tr');
+      linha.classList.add('tooltipped');
+      linha.setAttribute('data-tooltip', descricao);
+      linha.setAttribute('data-position', 'top');
+
+      linha.innerHTML = `
+        <td>${nome}</td>
+        <td>${pontos}</td>
+        <td>${winRate}</td>
+        <td>${vitorias}</td>
+        <td>${rodadas}</td>
+      `;
+      tabela.appendChild(linha);
+    });
+
+    // Inicializar tooltips após o conteúdo estar no DOM
+    document.addEventListener('DOMContentLoaded', function () {
+      const elems = document.querySelectorAll('.tooltipped');
+      M.Tooltip.init(elems);
+    });
+  </script>
+
+</body>
+</html>
