@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>13Armory - Tabela de Vitórias</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.3s ease-in;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        @media (max-width: 640px) {
+            .responsive-table th:nth-child(2),
+            .responsive-table td:nth-child(2) {
+                display: none;
+            }
+        }
+        
+        .file-input-wrapper {
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+        }
+        
+        .file-input-wrapper input[type=file] {
+            position: absolute;
+            top: 0;
+            right: 0;
+            min-width: 100%;
+            min-height: 100%;
+            font-size: 100px;
+            text-align: right;
+            filter: alpha(opacity=0);
+            opacity: 0;
+            outline: none;
+            background: white;
+            cursor: pointer;
+            display: block;
+        }
+    </style>
+</head>
+<body class="bg-gray-900 min-h-screen">
+    <div class="container mx-auto px-4 py-8">
+        <div class="bg-gray-800 rounded-xl shadow-2xl overflow-hidden border border-gray-700">
+            <div class="bg-gradient-to-r from-red-900 to-gray-800 px-6 py-5">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h1 class="text-2xl font-bold text-white flex items-center">
+                            <i class="fas fa-trophy mr-3"></i>
+                            13Armory - Vitórias
+                        </h1>
+                        <p class="text-gray-300 mt-1 text-sm">Tabela de jogadores e suas vitórias</p>
+                    </div>
+                    <div class="bg-gray-900 rounded-lg px-3 py-1 border border-gray-700">
+                        <span class="text-yellow-400 font-mono text-sm">v1.0.0</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="p-4 md:p-6">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+                    <div class="relative w-full md:w-72">
+                        <input type="text" id="searchInput" placeholder="Buscar jogador..." 
+                               class="w-full pl-10 pr-4 py-2 rounded-lg bg-gray-700 text-white border border-gray-600 focus:outline-none focus:ring-2 focus:ring-red-500 placeholder-gray-400">
+                        <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+                    </div>
+                    
+                    <div class="flex items-center gap-3 w-full md:w-auto">
+                        <div id="loadingIndicator" class="hidden">
+                            <div class="loading"></div>
+                        </div>
+                        <div class="file-input-wrapper">
+                            <button id="fileBtn" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center justify-center w-full md:w-auto transition-colors">
+                                <i class="fas fa-file-excel mr-2"></i>
+                                Carregar Excel
+                            </button>
+                            <input type="file" id="fileInput" accept=".xlsx, .xls" class="hidden">
+                        </div>
+                        <button id="refreshBtn" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg flex items-center justify-center w-full md:w-auto transition-colors">
+                            <i class="fas fa-sync-alt mr-2"></i>
+                            Atualizar
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="overflow-x-auto">
+                    <div class="min-w-full inline-block align-middle">
+                        <div class="overflow-hidden rounded-lg border border-gray-700">
+                            <table class="min-w-full divide-y divide-gray-700 responsive-table" id="dataTable">
+                                <thead class="bg-gray-700">
+                                    <tr>
+                                        <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                                            <i class="fas fa-user mr-1"></i> Nome
+                                        </th>
+                                        <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                                            <i class="fas fa-id-badge mr-1"></i> ID
+                                        </th>
+                                        <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                                            <i class="fas fa-trophy mr-1"></i> Vitórias
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-gray-700 bg-gray-800" id="tableBody">
+                                    <!-- Data will be inserted here -->
+                                    <tr>
+                                        <td colspan="3" class="px-4 py-6 text-center text-gray-400">
+                                            <i class="fas fa-file-import mr-2"></i>
+                                            Carregue o arquivo 13armory.xlsx
+                                        </td>
+                                    </tr>
+                                </tbody>
+                                <tfoot class="bg-gray-700">
+                                    <tr>
+                                        <td colspan="2" class="px-4 py-3 text-right text-sm font-medium text-gray-300">
+                                            Total de vitórias registradas:
+                                        </td>
+                                        <td class="px-4 py-3 text-left text-sm font-bold text-yellow-400" id="totalWins">
+                                            0
+                                        </td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="noResults" class="hidden text-center py-8">
+                    <i class="fas fa-user-slash text-4xl text-gray-600 mb-4"></i>
+                    <h3 class="text-lg font-medium text-gray-300">Nenhum jogador encontrado</h3>
+                    <p class="text-gray-500">Tente ajustar sua busca</p>
+                </div>
+            </div>
+            
+            <div class="bg-gray-700 px-6 py-3 border-t border-gray-600">
+                <div class="flex flex-col md:flex-row justify-between items-center text-sm">
+                    <div class="text-gray-400 mb-2 md:mb-0">
+                        <span id="rowCount">0</span> jogadores listados
+                    </div>
+                    <div class="text-gray-400">
+                        <i class="fas fa-clock mr-1"></i>
+                        Última atualização: <span id="lastUpdate" class="font-mono">-</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // DOM elements
+            const tableBody = document.getElementById('tableBody');
+            const searchInput = document.getElementById('searchInput');
+            const refreshBtn = document.getElementById('refreshBtn');
+            const fileInput = document.getElementById('fileInput');
+            const fileBtn = document.getElementById('fileBtn');
+            const loadingIndicator = document.getElementById('loadingIndicator');
+            const noResults = document.getElementById('noResults');
+            const rowCount = document.getElementById('rowCount');
+            const lastUpdate = document.getElementById('lastUpdate');
+            const totalWins = document.getElementById('totalWins');
+            
+            let allData = [];
+            let playerStats = {};
+            let currentFile = null;
+            
+            // Process Excel file
+            function processExcelFile(file) {
+                loadingIndicator.classList.remove('hidden');
+                tableBody.innerHTML = '<tr><td colspan="3" class="px-4 py-6 text-center text-gray-400"><i class="fas fa-spinner fa-spin mr-2"></i> Processando arquivo...</td></tr>';
+                noResults.classList.add('hidden');
+                
+                const reader = new FileReader();
+                
+                reader.onload = function(e) {
+                    try {
+                        const data = new Uint8Array(e.target.result);
+                        const workbook = XLSX.read(data, { type: 'array' });
+                        
+                        // Get first sheet
+                        const firstSheetName = workbook.SheetNames[0];
+                        const worksheet = workbook.Sheets[firstSheetName];
+                        
+                        // Convert to JSON
+                        const jsonData = XLSX.utils.sheet_to_json(worksheet);
+                        
+                        allData = jsonData;
+                        currentFile = file;
+                        processData(allData);
+                        updateLastUpdate();
+                        
+                        // Update button text
+                        fileBtn.innerHTML = `<i class="fas fa-check-circle mr-2"></i> ${file.name}`;
+                        fileBtn.classList.remove('bg-blue-600', 'hover:bg-blue-700');
+                        fileBtn.classList.add('bg-green-600', 'hover:bg-green-700');
+                        
+                        loadingIndicator.classList.add('hidden');
+                    } catch (error) {
+                        console.error('Error processing file:', error);
+                        loadingIndicator.classList.add('hidden');
+                        tableBody.innerHTML = `
+                            <tr>
+                                <td colspan="3" class="px-4 py-4 text-center text-red-400">
+                                    <i class="fas fa-exclamation-triangle mr-2"></i>
+                                    Erro ao processar arquivo. Verifique se é um Excel válido.
+                                </td>
+                            </tr>
+                        `;
+                    }
+                };
+                
+                reader.onerror = function() {
+                    loadingIndicator.classList.add('hidden');
+                    tableBody.innerHTML = `
+                        <tr>
+                            <td colspan="3" class="px-4 py-4 text-center text-red-400">
+                                <i class="fas fa-exclamation-triangle mr-2"></i>
+                                Erro ao ler arquivo.
+                            </td>
+                        </tr>
+                    `;
+                };
+                
+                reader.readAsArrayBuffer(file);
+            }
+            
+            // Process data and calculate wins
+            function processData(data) {
+                // Reset stats
+                playerStats = {};
+                let grandTotal = 0;
+                
+                // Calculate wins for each player
+                data.forEach(row => {
+                    // Assuming column E is 'Nome', F is 'ID', G is 'Vitórias'
+                    // If columns have headers, adjust accordingly
+                    const name = row['E'] || row['Nome'] || '';
+                    const id = row['F'] || row['ID'] || '';
+                    const wins = parseInt(row['G'] || row['Vitórias'] || 0);
+                    
+                    if (name && id) {
+                        const playerKey = `${name.toString().trim()}|${id.toString().trim()}`;
+                        
+                        if (!playerStats[playerKey]) {
+                            playerStats[playerKey] = {
+                                name: name.toString().trim(),
+                                id: id.toString().trim(),
+                                wins: 0
+                            };
+                        }
+                        
+                        playerStats[playerKey].wins += wins;
+                        grandTotal += wins;
+                    }
+                });
+                
+                // Convert to array and sort by wins (descending)
+                const playersArray = Object.values(playerStats).sort((a, b) => b.wins - a.wins);
+                
+                // Update total wins display
+                totalWins.textContent = grandTotal.toLocaleString('pt-BR');
+                
+                // Filter data based on search input
+                const searchTerm = searchInput.value.toLowerCase();
+                const filteredData = searchTerm 
+                    ? playersArray.filter(player => 
+                        player.name.toLowerCase().includes(searchTerm) || 
+                        player.id.toLowerCase().includes(searchTerm))
+                    : playersArray;
+                
+                // Display data
+                displayData(filteredData);
+                
+                // Update row count
+                rowCount.textContent = filteredData.length;
+                
+                // Show no results message if needed
+                if (filteredData.length === 0) {
+                    noResults.classList.remove('hidden');
+                } else {
+                    noResults.classList.add('hidden');
+                }
+            }
+            
+            // Display data in table
+            function displayData(data) {
+                tableBody.innerHTML = '';
+                
+                if (data.length === 0) {
+                    noResults.classList.remove('hidden');
+                    return;
+                }
+                
+                data.forEach((player, index) => {
+                    const rowElement = document.createElement('tr');
+                    rowElement.className = 'hover:bg-gray-700/50 fade-in';
+                    
+                    // Medal emoji based on position
+                    let medal = '';
+                    if (index === 0) medal = '🥇';
+                    else if (index === 1) medal = '🥈';
+                    else if (index === 2) medal = '🥉';
+                    
+                    rowElement.innerHTML = `
+                        <td class="px-4 py-3 whitespace-nowrap">
+                            <div class="flex items-center">
+                                <div class="flex-shrink-0 h-10 w-10 rounded-full bg-gray-700 flex items-center justify-center">
+                                    <i class="fas fa-user text-gray-400"></i>
+                                </div>
+                                <div class="ml-3">
+                                    <div class="text-sm font-medium text-white">${player.name} ${medal}</div>
+                                    <div class="text-xs text-gray-400">${player.id}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-4 py-3 whitespace-nowrap hidden md:table-cell">
+                            <div class="text-sm text-gray-300 font-mono">${player.id}</div>
+                        </td>
+                        <td class="px-4 py-3 whitespace-nowrap">
+                            <div class="flex items-center">
+                                <span class="w-8 h-8 flex items-center justify-center bg-yellow-900/50 rounded-full mr-3">
+                                    <span class="text-yellow-400 text-xs font-bold">${player.wins}</span>
+                                </span>
+                                <div class="w-full bg-gray-700 rounded-full h-2.5">
+                                    <div class="bg-yellow-500 h-2.5 rounded-full" style="width: ${Math.min(100, player.wins)}%"></div>
+                                </div>
+                            </div>
+                        </td>
+                    `;
+                    
+                    tableBody.appendChild(rowElement);
+                });
+            }
+            
+            // Update last update timestamp
+            function updateLastUpdate() {
+                const now = new Date();
+                const options = { 
+                    day: '2-digit', 
+                    month: '2-digit', 
+                    year: 'numeric', 
+                    hour: '2-digit', 
+                    minute: '2-digit',
+                    hour12: false
+                };
+                lastUpdate.textContent = now.toLocaleString('pt-BR', options);
+            }
+            
+            // Event listeners
+            searchInput.addEventListener('input', () => {
+                processData(allData);
+            });
+            
+            refreshBtn.addEventListener('click', function() {
+                if (currentFile) {
+                    processExcelFile(currentFile);
+                } else {
+                    alert('Por favor, carregue um arquivo Excel primeiro.');
+                }
+            });
+            
+            fileInput.addEventListener('change', function(e) {
+                if (e.target.files.length > 0) {
+                    const file = e.target.files[0];
+                    if (file.name.match(/\.(xlsx|xls)$/i)) {
+                        processExcelFile(file);
+                    } else {
+                        alert('Por favor, selecione um arquivo Excel (.xlsx ou .xls)');
+                    }
+                }
+            });
+            
+            fileBtn.addEventListener('click', function() {
+                fileInput.click();
+            });
+            
+            // Add animation to table rows when they appear
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('fade-in');
+                    }
+                });
+            }, { threshold: 0.1 });
+            
+            // Observe new rows when they're added
+            const config = { childList: true };
+            const callback = function(mutationsList, observer) {
+                for(let mutation of mutationsList) {
+                    if (mutation.type === 'childList') {
+                        mutation.addedNodes.forEach(node => {
+                            if (node.nodeType === 1) { // Element node
+                                observer.observe(node);
+                            }
+                        });
+                    }
+                }
+            };
+            
+            const tableObserver = new MutationObserver(callback);
+            tableObserver.observe(tableBody, config);
+        });
+    </script>
+</body>
+</html>
